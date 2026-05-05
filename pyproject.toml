@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ue-agent-workflow"
+version = "0.1.0"
+description = "AI Agent驱动的Unreal Engine数字媒体创作工作流"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv>=1.0",
+    "openai>=1.0",
+    "click>=8.0",
+    "pydantic>=2.0",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+claude = ["anthropic>=0.70"]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+ue-agent-workflow = "ue_agent_workflow.cli:main"

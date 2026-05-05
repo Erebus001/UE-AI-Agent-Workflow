@@ -1,34 +1,80 @@
 # UE-Agent-Workflow
 
-基于 AI Agent 的 Unreal Engine 数字媒体综合创作工作流
+基于 AI Agent 的 Unreal Engine 数字媒体综合创作工作流。
 
-## 项目概述
+## 快速开始
 
-利用多 Agent 协作系统，打通从概念设计到 Unreal Engine 交互场景落地的全流程。Agent 自动解析需求、生成视觉资产、编写蓝图逻辑，大幅缩短数字媒体创作周期。
+```bash
+# 安装
+pip install -e .
 
-## 核心架构
+# 配置 API Key
+cp .env.example .env
+# 编辑 .env 填入你的 API Key
+
+# 运行
+ue-agent-workflow run-brief --title "赛博朋克城市" --style "霓虹美学" --desc "可交互夜景" --assets "建筑,灯光" --features "漫游,点击"
+```
+
+## 架构
 
 ```
-用户需求 → 需求理解 Agent → 拆解任务
-                              ├── 设计 Agent（概念图 / 材质 / UI）
-                              ├── 技术 Agent（资产导入 / 蓝图 / 光照）
-                              └── 质检 Agent（风格一致性 / 性能检查）
-                                    ↓
-                            UE 可交互场景
+CLI 命令
+   │
+ Orchestrator ─── 编排 4 个 Agent
+   │
+   ├─ 需求理解Agent → 拆解子任务
+   ├─ 设计Agent     → 视觉概念/材质/UI
+   ├─ 技术Agent     → UE 资产/蓝图
+   └─ 质检Agent     → 风格检查/性能评审
+   │
+ LLM Client ─── 统一接口，支持 Claude / MiMo
+ UE Bridge  ─── 直连 UE / 文件脚本 / Null 降级
 ```
 
-## Agent 分工
+## LLM 支持
 
-| Agent | 职责 |
-|-------|------|
-| **需求理解 Agent** | 解析项目 brief，拆解为视觉、资产、蓝图子任务 |
-| **设计 Agent** | 根据风格参考生成概念图、材质贴图和 UI 图标 |
-| **技术 Agent** | 资产导入 UE、编写蓝图逻辑、光照烘焙与性能优化 |
-| **质检 Agent** | 检查跨节点风格一致性和引擎内性能指标 |
+| Provider | 配置 | 说明 |
+|----------|------|------|
+| Claude | `LLM_PROVIDER=claude` + `CLAUDE_API_KEY` | 推荐，需安装 anthropic |
+| MiMo | `LLM_PROVIDER=mimo` + `MIMO_API_KEY` | 小米 MiMo API |
+| OpenAI | `LLM_PROVIDER=openai` + `OPENAI_API_KEY` | 通用 OpenAI 兼容 |
 
-## 技术栈
+## UE 集成
 
-- **LLM**: Claude / MiMo 系列模型
-- **Agent 框架**: Python 多 Agent 编排
-- **引擎**: Unreal Engine 5.x
-- **资产管线**: Blender / Substance Painter 自动化
+三种模式自动切换：
+- **直连模式**：在 UE Editor Python 环境中直接使用 `import unreal`
+- **文件模式**：生成 .py 脚本到 UE 项目 `Content/Python/` 目录
+- **Null 模式**：无 UE 时打印操作说明，其余功能全部正常
+
+**不需要 UE 也能使用 90% 的功能。**
+
+## 项目结构
+
+```
+ue_agent_workflow/
+├── llm.py            # 统一 LLM 接口
+├── agent_base.py     # ReAct Agent 循环
+├── context.py        # Agent 间共享上下文
+├── tools.py          # 工具函数
+├── orchestrator.py   # 多 Agent 编排
+├── cli.py            # CLI 入口
+├── agents/           # Agent 实现
+│   ├── requirement.py
+│   ├── design.py
+│   ├── tech.py
+│   └── qa.py
+└── ue/               # UE 桥接
+    ├── bridge.py     # 三种桥接模式
+    └── scripts/      # UE 脚本模板
+```
+
+## 命令
+
+```bash
+ue-agent-workflow run-brief   # 从参数运行
+ue-agent-workflow run-file    # 从 JSON 运行
+ue-agent-workflow init-config # 初始化配置
+ue-agent-workflow agents      # 查看 Agent 列表
+ue-agent-workflow version     # 版本信息
+```
